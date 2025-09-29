@@ -2,6 +2,7 @@
 import { useCartStore } from '#imports';
 
 const { t } = useI18n()
+const localePath = useLocalePath()
 const cartStore = useCartStore();
 
 function updateItemQuantity(productId: number, newQuantity: number) {
@@ -20,7 +21,7 @@ function removeItem(productId: number) {
     <div v-if="cartStore.items.length === 0" class="text-center py-20  border rounded-lg">
       <p class="text-gray-500">{{ t("cart.cartIsEmpty") }}</p>
       
-      <NuxtLink to="/">
+      <NuxtLink :to="localePath('/')">
         <UiButton
           t-key="cart.continueShopping"
           variant="secondary"

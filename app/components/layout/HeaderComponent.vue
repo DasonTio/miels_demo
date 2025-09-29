@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { useCartStore } from '#imports';
 const cartStore = useCartStore();
-
+const localePath = useLocalePath()
 </script>
 
 <template>
   <header class="border-b border-gray-200 py-4">
     <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-      <NuxtLink to="/" class="text-2xl font-serif font-bold text-green-800">
+      <NuxtLink :to="localePath('/')" class="text-2xl font-serif font-bold text-green-800">
         MIELS
       </NuxtLink>
-      <nav>
-        <NuxtLink to="/cart" class="relative group">
+      <nav class="flex gap-8 items-center">
+        <UiLocaleSwitcher/>
+        <NuxtLink :to="localePath('/cart')" class="relative group">
           <span class="font-semibold">
             <Icon name="material-symbols:shopping-bag-outline" class="w-7 h-7" />
           </span>
