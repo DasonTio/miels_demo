@@ -20,6 +20,7 @@ export interface ProductResponse{
     slug: string;
     name: string;
     price: number;
+    type: string;
     imageUrl: string;
     isBestSeller: boolean;
   }[];
@@ -75,6 +76,7 @@ export default defineEventHandler(async (event) => {
       price: p.price,
       imageUrl: p.images[0]?.image_url || '',
       isBestSeller: p.is_best_seller,
+      type: p.type,
       categoryName: p.category?.name || 'Uncategorized'
     }));
     

@@ -5,6 +5,7 @@ interface ProductCardProps {
   slug: string;
   name: string;
   price: number;
+  type: string;
   imageUrl: string;
   isBestSeller?: boolean;
 }
@@ -19,7 +20,7 @@ const localePath = useLocalePath()
 
 <template>
   <NuxtLink 
-    :to="localePath(`/products/${product.slug}`)" 
+    :to="localePath(`/products/${product.type}/${product.slug}`)"     
     class="group block bg-white rounded-lg overflow-hidden transition-shadow duration-300 hover:shadow-xl relative"
   >
     <div class="relative w-full h-64 overflow-hidden">

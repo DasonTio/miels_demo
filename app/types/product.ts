@@ -27,7 +27,10 @@ export interface ProductBundle {
   description: string;
   price: number;
   is_best_seller: boolean;
+  type: string;
   images: { image_url: string }[];
+  product_images: { image_url: string }[];
+  bundle_images: { image_url: string }[];
   bundle_items: BundleItem[];
   category: ProductCategory;
 }

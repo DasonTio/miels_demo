@@ -7,9 +7,11 @@ const {t} = useI18n()
 
 const route = useRoute();
 const cartStore = useCartStore();
+
+const type = route.params.type as string;
 const slug = route.params.slug as string;
 
-const { data: product, pending } = await useFetch<ProductBundle>(`/api/products/${slug}`);
+const { data: product, pending } = await useFetch<ProductBundle>(`/api/products/${type}/${slug}`);
 
 const selectedVariants = ref<Record<number, string>>({});
 const quantity = ref(1);
