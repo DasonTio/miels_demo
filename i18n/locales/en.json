@@ -1,0 +1,15 @@
+{
+    "product":{
+        "title": "Product",
+        "headline": "All Natural Ingredients",
+        "description": "Each product is created for all ages in mind, safe to use daily and crafted without SLS, paraben, artificial coloring or preservatives. Everything MIELS is also gentle to the nose as it is to the skin, with no artificial fragrances.",
+        "addToCart": "Add To Cart",
+        "buyNow": "Buy Now"
+    },
+    "cart":{
+        "title": "Cart",
+        "cartIsEmpty": "Your Cart is still empty.",
+        "continueShopping": "Continue Shopping",
+        "checkout": "Proceed to Checkout"
+    }
+}
