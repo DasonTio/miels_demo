@@ -54,12 +54,12 @@ watchDebounced(searchQuery, (newSearchQuery: string) => {
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
       
       <aside class="col-span-1 border-r border-gray-200 pr-8 py-8">
-        <h2 class="text-3xl font-serif text-green-700 font-semibold mb-4 hidden lg:block">PRODUCTS</h2>
+        <h2 class="text-3xl font-serif text-green-700 font-semibold mb-4 hidden lg:block">{{t("product.title").toUpperCase()}}</h2>
         <nav v-if="categories" class="space-y-4">
           <button 
             :class="['w-full text-left font-semibold py-1', !selectedCategory ? 'opacity-100 text-green-700' : 'opacity-50 hover:opacity-100 text-gray-700']"
             @click="selectCategory(undefined)" >
-            ALL PRODUCTS
+            {{ t("product.allProduct").toUpperCase() }}
           </button>
           <button 
             v-for="cat in categories" 
@@ -92,13 +92,12 @@ watchDebounced(searchQuery, (newSearchQuery: string) => {
           <input 
             v-model="searchQuery" 
             type="text" 
-            placeholder="Search Product, Bundle or Category" 
+            :placeholder="t('product.searchBar')" 
             class="w-full p-3 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-700"
           >
-          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-          </svg>
+          <Icon name="fa7-solid:magnifying-glass" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         </div>
+        
 
         <div v-if="pending" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
           <div v-for="n in 9" :key="n" class="bg-gray-200 rounded-lg h-80"/>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useCartStore } from '#imports';
 const cartStore = useCartStore();
-const {t} = useI18n()
+
 </script>
 
 <template>
@@ -12,7 +12,9 @@ const {t} = useI18n()
       </NuxtLink>
       <nav>
         <NuxtLink to="/cart" class="relative group">
-          <span class="font-semibold">{{ t("cart.title") }}</span>
+          <span class="font-semibold">
+            <Icon name="material-symbols:shopping-bag-outline" class="w-7 h-7" />
+          </span>
           <span 
             v-if="cartStore.totalItems > 0"
             class="absolute -top-2 -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"

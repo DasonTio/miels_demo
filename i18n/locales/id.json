@@ -2,14 +2,25 @@
     "product":{
         "title": "Produk",
         "headline": "Terbuat dari Bahan Alami",
+        "allProduct": "Semua Produk",
         "description": "Setiap kreasi MIELS diformulasikan untuk semua kalangan usia dan aman untuk pemakaian sehari-hari. Dibuat tanpa kandungan SLS, paraben, pewarna, dan pengawet buatan. Kelembutan MIELS tidak hanya memanjakan kulit, tapi juga terasa dari aromanya yang natural karena dibuat tanpa parfum sintetis.",
-        "addToCart": "Masukkan ke Keranjang",
-        "buyNow": "Beli Sekarang"
+        "searchBar": "Cari Produk, Paket, atau Kategori"
+    },
+    "detail": {        
+        "buyNow": "Beli Sekarang",
+        "addToCart": "Tambah ke Keranjang",
+        "productDescription": "Deskripsi Produk",
+        "reviews": "Ulasan"
     },
     "cart":{
         "title": "Keranjang",
         "cartIsEmpty": "Keranjang kamu masih kosong nih.",
         "continueShopping": "Lanjut Belanja",
-        "checkout": "Lanjutkan ke Pembayaran"
+        "checkout": "Lanjutkan ke Pembayaran",
+        "summary": "Ringkasan Pesanan",
+        "subtotal": "Subtotal",
+        "shipping": "Pengiriman",
+        "free": "Gratis",
+        "total": "Total"
     }
 }

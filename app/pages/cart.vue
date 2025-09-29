@@ -60,7 +60,7 @@ function removeItem(productId: number) {
               <button class="px-3 py-1 font-bold" @click="updateItemQuantity(item.product.id, item.quantity + 1)">+</button>
             </div>
             <button class="text-gray-400 hover:text-red-500" @click="removeItem(item.product.id)" >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              <Icon name="fa6-regular:trash-can" style="color: black" />
             </button>
           </div>
         </div>
@@ -68,18 +68,18 @@ function removeItem(productId: number) {
 
       <aside class="lg:col-span-1">
         <div class="border rounded-lg p-6 bg-gray-50">
-          <h2 class="text-2xl font-serif mb-4">Summary</h2>
+          <h2 class="text-2xl font-serif mb-4">{{ t("cart.summary") }}</h2>
           <div class="flex justify-between text-gray-600">
-            <span>Subtotal</span>
+            <span>{{ t("cart.subtotal") }}</span>
             <UiPrice :amount="cartStore.totalPrice" />
           </div>
           <div class="flex justify-between text-gray-600 mt-2">
-            <span>Shipping</span>
-            <span>Free</span>
+            <span>{{ t("cart.shipping") }}</span>
+            <span>{{ t("cart.free") }}</span>
           </div>
           <hr class="my-4">
           <div class="flex justify-between font-bold text-xl">
-            <span>Total</span>
+            <span>{{ t("cart.total") }}</span>
             <UiPrice :amount="cartStore.totalPrice" />
           </div>
 

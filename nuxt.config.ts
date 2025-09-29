@@ -12,19 +12,8 @@ export default defineNuxtConfig({
       ]
     }
   },
-  modules: [
-    '@nuxt/icon',
-    '@nuxt/fonts',
-    '@nuxt/image',
-    '@nuxt/eslint',
-    '@nuxtjs/tailwindcss',
-    '@nuxtjs/i18n',
-    '@pinia/nuxt',
-    'vue-sonner/nuxt',
-  ],
-  // vueSonner: {
-  //   css: false 
-  // },
+  css: ['~/assets/css/main.css'],
+  modules: ['@nuxt/icon', '@nuxt/fonts', '@nuxt/image', '@nuxt/eslint', '@nuxtjs/tailwindcss', '@nuxtjs/i18n', '@pinia/nuxt', 'vue-sonner/nuxt', 'vue3-carousel-nuxt', 'lenis/nuxt'],
   i18n: {
     langDir: 'locales',
     strategy: 'prefix_except_default',
