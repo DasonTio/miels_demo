@@ -1,17 +1,8 @@
 <script setup lang="ts">
-// Simplified Product type for the grid card
-interface ProductCardProps {
-  id: number;
-  slug: string;
-  name: string;
-  price: number;
-  type: string;
-  imageUrl: string;
-  isBestSeller?: boolean;
-}
+import type { DisplayProduct } from '~/types/product';
 
 defineProps<{
-  product: ProductCardProps
+  product: DisplayProduct
 }>();
 
 const localePath = useLocalePath()
@@ -25,13 +16,14 @@ const localePath = useLocalePath()
   >
     <div class="relative w-full h-64 overflow-hidden">
       <img 
-        :src="product.imageUrl" 
+        v-if="product.images && product.images.length > 0"
+        :src="product.images[0]" 
         :alt="product.name" 
         class="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-105"
       >
       
       <div 
-        v-if="product.isBestSeller" 
+        v-if="product.is_best_seller" 
         class="absolute top-3 left-3 bg-green-800 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md"
       >
         BEST SELLER
@@ -45,7 +37,7 @@ const localePath = useLocalePath()
         {{ product.name }}
       </h3>
       
-      <UiPrice :amount="product.price" class="mt-2 text-xl" />
+      <UiPrice :amount="product.price??0" class="mt-2 text-xl" />
     </div>
   </NuxtLink>
 </template>

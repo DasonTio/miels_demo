@@ -1,30 +1,26 @@
-interface CategoryAPIResponse {
-  category_id: number;
-  name: string;
-  slug: string;
-}
+import { serverSupabaseClient } from '#supabase/server';
+import type { Database } from '~~/app/types/database';
 
-export interface CategoryResponse{
+export interface CategoryResponse {
   id: number;
   name: string;
-  slug: string;
+  slug: string | null;
 }
 
-export default defineEventHandler(async () => {
-  try {
-    const response = await $fetch<{ data: CategoryAPIResponse[] }>('https://api-shop.miels.id/api/categories');
+export default defineEventHandler(async (event): Promise<CategoryResponse[]> => {
+  const client = await serverSupabaseClient<Database>(event);
 
-    return response.data.map(cat => ({
-      id: cat.category_id,
-      name: cat.name,
-      slug: cat.slug,
-    })) as CategoryResponse[];
+  const { data, error } = await client
+    .from('categories')
+    .select('id, name, slug')
+    .order('name', { ascending: true });
 
-  } catch (error) {
-    console.error('[API] Error fetching categories:', error);
+  if (error) {
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to fetch categories.',
+      statusMessage: error.message,
     });
   }
+
+  return data.filter(Boolean) as CategoryResponse[];
 });
