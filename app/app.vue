@@ -3,9 +3,10 @@ import { VueLenis } from 'lenis/vue'
 </script>
 <template> 
   <VueLenis root/>
-  <div class="font-sans text-gray-800 bg-white container mx-auto px-4 py-8">
+  <div class="font-sans text-gray-800 ">
     <Toaster rich-colors position="bottom-right" />
-    <LayoutHeaderComponent/>
-    <NuxtPage />
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
   </div>
 </template>
