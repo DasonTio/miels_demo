@@ -34,3 +34,17 @@ export interface ProductBundle {
   bundle_items: BundleItem[];
   category: ProductCategory;
 }
+
+export interface DisplayProduct {
+  id: number;
+  name: string;
+  slug: string | null;
+  price: number | null;
+  images: string[]; 
+  is_best_seller: boolean | null;
+  category: {
+    name: string;
+    slug: string | null;
+  } | null;
+  type: 'product' | 'bundle'; 
+}

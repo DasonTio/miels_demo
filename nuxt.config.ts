@@ -13,7 +13,7 @@ export default defineNuxtConfig({
     }
   },
   css: ['~/assets/css/main.css'],
-  modules: ['@nuxt/icon', '@nuxt/fonts', '@nuxt/image', '@nuxt/eslint', '@nuxtjs/tailwindcss', '@nuxtjs/i18n', '@pinia/nuxt', 'vue-sonner/nuxt', 'vue3-carousel-nuxt', 'lenis/nuxt'],
+  modules: ['@nuxt/icon', '@nuxt/fonts', '@nuxt/image', '@nuxt/eslint', '@nuxtjs/tailwindcss', '@nuxtjs/i18n', '@pinia/nuxt', 'vue-sonner/nuxt', 'vue3-carousel-nuxt', 'lenis/nuxt', "@nuxtjs/supabase"],
   i18n: {
     langDir: 'locales',
     strategy: 'prefix_except_default',
@@ -32,5 +32,17 @@ export default defineNuxtConfig({
       }
     ],
     defaultLocale: 'id',
+  },
+  supabase:{
+    redirect: false,
+    redirectOptions: {
+      login: '/login',
+      callback: '/confirm',
+      exclude: [
+        '/', // The homepage
+        '/products', // The product listing page
+        '/products/*' // All individual product detail pages
+      ],
+    }
   }
 })
