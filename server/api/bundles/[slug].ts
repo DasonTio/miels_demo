@@ -1,7 +1,7 @@
 import { serverSupabaseClient } from "#supabase/server";
 import type { Database } from "@/types/database";
 import type { ProductDetail } from "@/types/productDetail";
-import { parseImages } from "~~/app/utils/utilities";
+import { parseImages } from "~/utils/utilities";
 
 export default defineEventHandler(async (event): Promise<ProductDetail> => {
   const slug = event.context.params?.slug;
@@ -23,6 +23,26 @@ export default defineEventHandler(async (event): Promise<ProductDetail> => {
       ...product,
       images: parseImages(product.images),
       type: "product",
+    };
+  }
+
+  const { data: bundle } = await client
+    .from("bundles")
+    .select(
+      `
+      id, name, slug, price, description, images, is_best_seller,
+      category:categories (name, slug),
+      bundle_items:bundle_product_items (variant_name, product:products (id, name, slug, price, images))
+    `
+    )
+    .eq("slug", slug)
+    .single();
+
+  if (bundle) {
+    return {
+      ...bundle,
+      images: parseImages(bundle.images),
+      type: "bundle",
     };
   }
 

@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import type { DisplayProduct } from '~/types/product';
-
 defineProps<{
   product: DisplayProduct
 }>();
 
 const localePath = useLocalePath()
-
 </script>
-
 <template>
   <NuxtLink 
     :to="localePath(`/products/${product.type}/${product.slug}`)"     
@@ -31,7 +28,7 @@ const localePath = useLocalePath()
     </div>
     
     <div class="p-4">
-      <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Miels - Bundle</p> 
+      <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1 line-clamp-1">{{ product.category?.name }}</p> 
       
       <h3 class="font-bold text-lg text-gray-800 mb-1 truncate group-hover:text-green-700 transition-colors duration-200">
         {{ product.name }}

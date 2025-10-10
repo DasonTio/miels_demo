@@ -6,7 +6,7 @@ export interface Variant {
     price: number;
     stock: number;
     product_images: { image_url: string }[];
-  }
+  };
 }
 export interface BundleItem {
   bundle_item_id: number;
@@ -14,7 +14,7 @@ export interface BundleItem {
   items: Variant[];
 }
 
-export interface ProductCategory{
+export interface ProductCategory {
   category_id: number;
   name: string;
   slug: string;
@@ -22,7 +22,7 @@ export interface ProductCategory{
 
 export interface ProductBundle {
   id: number;
-  name:string;
+  name: string;
   slug: string;
   description: string;
   price: number;
@@ -40,11 +40,13 @@ export interface DisplayProduct {
   name: string;
   slug: string | null;
   price: number | null;
-  images: string[]; 
+  images: string[];
+  stock: number | null;
+  is_active: boolean | null;
   is_best_seller: boolean | null;
   category: {
     name: string;
     slug: string | null;
   } | null;
-  type: 'product' | 'bundle'; 
+  type: "product" | "bundle";
 }
