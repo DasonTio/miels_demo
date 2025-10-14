@@ -5,7 +5,6 @@ import type { DisplayProduct } from "~~/app/types/product";
 export default defineEventHandler(async (event): Promise<DisplayProduct[]> => {
   const client = await serverSupabaseClient<Database>(event);
 
-  // Fetch all products and bundles in parallel, including inactive ones
   const [productsResponse, bundlesResponse] = await Promise.all([
     client
       .from("products")
@@ -19,7 +18,6 @@ export default defineEventHandler(async (event): Promise<DisplayProduct[]> => {
       ),
   ]);
 
-  // Handle potential errors from either query
   if (productsResponse.error) {
     throw createError({
       statusCode: 500,
@@ -33,7 +31,6 @@ export default defineEventHandler(async (event): Promise<DisplayProduct[]> => {
     });
   }
 
-  // Helper function to safely parse image data
   const parseImages = (imagesData: unknown): string[] => {
     if (Array.isArray(imagesData)) return imagesData.map(String);
     if (typeof imagesData === "string") {
@@ -47,7 +44,6 @@ export default defineEventHandler(async (event): Promise<DisplayProduct[]> => {
     return [];
   };
 
-  // Format and add a 'type' property to distinguish them
   const formattedProducts = productsResponse.data.map((p) => ({
     ...p,
     images: parseImages(p.images),
@@ -60,7 +56,6 @@ export default defineEventHandler(async (event): Promise<DisplayProduct[]> => {
     type: "bundle" as const,
   }));
 
-  // Combine and sort alphabetically
   const allItems = [...formattedProducts, ...formattedBundles];
   return allItems.sort((a, b) => a.name.localeCompare(b.name));
 });

@@ -18,22 +18,43 @@ const selectedCategory = ref('All Category');
 const currentPage = ref(1);
 const itemsPerPage = 10;
 const openMenuId = ref<number | null>(null);
+
 const actionMenuRefs = ref<Record<number, HTMLElement | null>>({});
 const editingProductId = ref<number | null>(null);
 const editingProductData = ref<Partial<DisplayProduct>>({});
+
 const isSaving = ref(false);
+const stockIsAsc = ref<boolean>(true);
 
 const filteredProducts = computed(() => {
   let products = allProducts.value;
   if (filterTab.value === 'Active') products = products.filter(p => p.is_active);
   else if (filterTab.value === 'Inactive') products = products.filter(p => !p.is_active);
+
   if (selectedCategory.value !== 'All Category') products = products.filter(p => p.category?.slug === selectedCategory.value);
+  
   if (searchQuery.value) {
     const lowerCaseQuery = searchQuery.value.toLowerCase();
     products = products.filter(p => p.name.toLowerCase().includes(lowerCaseQuery));
   }
-  return products;
+
+
+  const sortedProducts = [...products];
+  
+  sortedProducts.sort((a,b)=>{
+      const valA = a.stock ?? -1;
+      const valB = b.stock ?? -1;
+      const comparison = valA - valB;
+      return stockIsAsc.value ? comparison : -comparison;
+  })
+
+  return sortedProducts
+  
 });
+
+function sortByStock() {
+  stockIsAsc.value = !stockIsAsc.value
+}
 
 const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage));
 const paginatedProducts = computed(() => {
@@ -100,10 +121,13 @@ function changePage(page: number) {
     <div class="flex justify-between items-center pb-4 border-b">
       <div class="flex items-center gap-4">
         <input v-model="searchQuery" type="text" placeholder="Search Product" class="border rounded-md px-4 py-2 w-80" />
-        <select v-model="selectedCategory" class="border rounded-md px-4 py-2">
-          <option>All Category</option>
-          <option v-for="cat in categories" :key="cat.id" :value="cat.slug">{{ cat.name }}</option>
-        </select>
+        <div class="relative">
+          <select v-model="selectedCategory" class="border rounded-md px-4 py-2 appearance-none">
+            <option>All Category</option>
+            <option v-for="cat in categories" :key="cat.id" :value="cat.slug">{{ cat.name }}</option>
+          </select>
+          <Icon name="tabler:chevron-down" class="absolute right-2 top-1/2 -translate-y-1/2"/>
+        </div>
       </div>
       <button class="bg-green-700 px-6 py-2.5 text-white rounded-md font-semibold">+ New Product</button>
     </div>
@@ -122,7 +146,18 @@ function changePage(page: number) {
           <tr>
             <th scope="col" class="px-6 py-3">Product Information</th>
             <th scope="col" class="px-6 py-3 text-right">Price (Rp)</th>
-            <th scope="col" class="px-6 py-3 text-center">Stock</th>
+            <th scope="col" class="px-6 py-3 text-center flex items-center">
+              <button class="flex items-center gap-2 group mx-auto" @click="sortByStock">
+                Stock
+                <Icon 
+                  name="tabler:arrows-sort"
+                  class="w-4 h-4 text-gray-300 group-hover:text-gray-500"
+                  :class="[{
+                    '-scale-x-100':stockIsAsc,
+                  }]"
+                />
+              </button>
+            </th>
             <th scope="col" class="px-6 py-3 text-center">Active</th>
             <th scope="col" class="px-6 py-3 text-center">Best Seller</th>
             <th scope="col" class="px-6 py-3 text-center">Action</th>
