@@ -1,123 +1,147 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
-import type { DisplayProduct } from '~~/app/types/product';
-import type { CategoryResponse } from '~~/server/api/categories';
+  import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+  import type { DisplayProduct } from '~~/app/types/product';
+  import type { CategoryResponse } from '~~/server/api/categories';
 
-definePageMeta({
-  layout: "authenticated"
-});
+  definePageMeta({
+    layout: "authenticated"
+  });
 
-const [{ data: allProducts, pending, refresh: refreshProducts }, { data: categories }] = await Promise.all([
-  useFetch<DisplayProduct[]>('/api/admin/products', { default: () => [] }),
-  useFetch<CategoryResponse[]>('/api/categories', { default: () => [] }),
-]);
+  const [{ data: allProducts, pending, refresh: refreshProducts }, { data: categories }] = await Promise.all([
+    useFetch<DisplayProduct[]>('/api/admin/products', { default: () => [] }),
+    useFetch<CategoryResponse[]>('/api/categories', { default: () => [] }),
+  ]);
 
-const filterTab = ref('All Products');
-const searchQuery = ref('');
-const selectedCategory = ref('All Category');
-const currentPage = ref(1);
-const itemsPerPage = 10;
-const openMenuId = ref<number | null>(null);
+  // Filtering
+  const filterTab = ref('All Products');
+  const searchQuery = ref('');
+  const selectedCategory = ref('All Category');
+  const currentPage = ref(1);
+  const itemsPerPage = 10;
+  const openMenuId = ref<number | null>(null);
 
-const actionMenuRefs = ref<Record<number, HTMLElement | null>>({});
-const editingProductId = ref<number | null>(null);
-const editingProductData = ref<Partial<DisplayProduct>>({});
+  // Editing
+  const actionMenuRefs = ref<Record<number, HTMLElement | null>>({});
+  const editingProductId = ref<number | null>(null);
+  const editingProductData = ref<Partial<DisplayProduct>>({});
+  const isSaving = ref(false);
 
-const isSaving = ref(false);
-const stockIsAsc = ref<boolean>(true);
+  // Deleting
+  const productToDelete = ref<DisplayProduct | null>(null);
 
-const filteredProducts = computed(() => {
-  let products = allProducts.value;
-  if (filterTab.value === 'Active') products = products.filter(p => p.is_active);
-  else if (filterTab.value === 'Inactive') products = products.filter(p => !p.is_active);
+  // Sort
+  const stockSortIsAsc = ref<boolean>(true);
 
-  if (selectedCategory.value !== 'All Category') products = products.filter(p => p.category?.slug === selectedCategory.value);
-  
-  if (searchQuery.value) {
-    const lowerCaseQuery = searchQuery.value.toLowerCase();
-    products = products.filter(p => p.name.toLowerCase().includes(lowerCaseQuery));
+
+  const filteredProducts = computed(() => {
+    let products = allProducts.value;
+    if (filterTab.value === 'Active') products = products.filter(p => p.is_active);
+    else if (filterTab.value === 'Inactive') products = products.filter(p => !p.is_active);
+
+    if (selectedCategory.value !== 'All Category') products = products.filter(p => p.category?.slug === selectedCategory.value);
+    
+    if (searchQuery.value) {
+      const lowerCaseQuery = searchQuery.value.toLowerCase();
+      products = products.filter(p => p.name.toLowerCase().includes(lowerCaseQuery));
+    }
+
+
+    const sortedProducts = [...products];
+    
+    sortedProducts.sort((a,b)=>{
+        const valA = a.stock ?? -1;
+        const valB = b.stock ?? -1;
+        const comparison = valA - valB;
+        return stockSortIsAsc.value ? comparison : -comparison;
+    })
+
+    return sortedProducts
+    
+  });
+
+  function sortByStock() {
+    stockSortIsAsc.value = !stockSortIsAsc.value
   }
 
+  const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage));
+  const paginatedProducts = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredProducts.value.slice(start, end);
+  });
 
-  const sortedProducts = [...products];
-  
-  sortedProducts.sort((a,b)=>{
-      const valA = a.stock ?? -1;
-      const valB = b.stock ?? -1;
-      const comparison = valA - valB;
-      return stockIsAsc.value ? comparison : -comparison;
-  })
+  watch([filterTab, searchQuery, selectedCategory], () => { currentPage.value = 1; });
 
-  return sortedProducts
-  
-});
+  const handleClickOutside = (event: MouseEvent) => {
+    if (openMenuId.value === null) return;
+    const activeMenu = actionMenuRefs.value[openMenuId.value];
+    if (activeMenu && !activeMenu.contains(event.target as Node)) openMenuId.value = null;
+  };
+  onMounted(() => document.addEventListener('click', handleClickOutside));
+  onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
-function sortByStock() {
-  stockIsAsc.value = !stockIsAsc.value
-}
+  const formatPrice = (amount: number | null) => {
+    if (amount === null) return 'N/A';
+    return new Intl.NumberFormat('id-ID').format(amount);
+  };
 
-const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage));
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return filteredProducts.value.slice(start, end);
-});
-
-watch([filterTab, searchQuery, selectedCategory], () => { currentPage.value = 1; });
-
-const handleClickOutside = (event: MouseEvent) => {
-  if (openMenuId.value === null) return;
-  const activeMenu = actionMenuRefs.value[openMenuId.value];
-  if (activeMenu && !activeMenu.contains(event.target as Node)) openMenuId.value = null;
-};
-onMounted(() => document.addEventListener('click', handleClickOutside));
-onUnmounted(() => document.removeEventListener('click', handleClickOutside));
-
-const formatPrice = (amount: number | null) => {
-  if (amount === null) return 'N/A';
-  return new Intl.NumberFormat('id-ID').format(amount);
-};
-
-function toggleMenu(productId: number) {
-  openMenuId.value = openMenuId.value === productId ? null : productId;
-}
-
-function startEditing(product: DisplayProduct) {
-  editingProductId.value = product.id;
-  editingProductData.value = JSON.parse(JSON.stringify(product));
-  openMenuId.value = null;
-}
-
-function cancelEditing() {
-  editingProductId.value = null;
-  editingProductData.value = {};
-}
-
-async function updateProduct(productId: number, payload: Partial<DisplayProduct>) {
-  isSaving.value = true;
-  try {
-    await $fetch(`/api/admin/products/${productId}`, {
-      method: 'PUT',
-      body: payload
-    });
-    await refreshProducts(); 
-  } catch (err) {
-    console.error("Failed to update product:", err);
-  } finally {
-    isSaving.value = false;
-    cancelEditing();
+  function toggleMenu(productId: number) {
+    openMenuId.value = openMenuId.value === productId ? null : productId;
   }
-}
 
-function changePage(page: number) {
-  if (page < 1 || page > totalPages.value) return;
-  currentPage.value = page;
-  window.scrollTo({ top: document.getElementById('product-grid')?.offsetTop, behavior: 'smooth' });
-}
+  function startEditing(product: DisplayProduct) {
+    editingProductId.value = product.id;
+    editingProductData.value = JSON.parse(JSON.stringify(product));
+    openMenuId.value = null;
+  }
+
+  function cancelEditing() {
+    editingProductId.value = null;
+    editingProductData.value = {};
+  }
+
+  async function updateProduct(productId: number, payload: Partial<DisplayProduct>) {
+    isSaving.value = true;
+    try {
+      await $fetch(`/api/admin/products/${productId}`, {
+        method: 'PUT',
+        body: payload
+      });
+      await refreshProducts(); 
+    } catch (err) {
+      console.error("Failed to update product:", err);
+    } finally {
+      isSaving.value = false;
+      cancelEditing();
+    }
+  }
+  async function deleteProduct() {
+    try {
+      await $fetch(`/api/admin/products/${productToDelete.value?.id}`, {
+        method: 'DELETE',
+        body: { type: productToDelete.value?.type }
+      });
+      await refreshProducts(); 
+    } catch (err) { console.error("Delete failed:", err); }
+    finally{
+      productToDelete.value = null
+    }
+  }
+
+  function confirmDeleting(product: DisplayProduct) {
+    openMenuId.value = null; 
+    productToDelete.value = product
+  }
+
+  function changePage(page: number) {
+    if (page < 1 || page > totalPages.value) return;
+    currentPage.value = page;
+    window.scrollTo({ top: document.getElementById('product-grid')?.offsetTop, behavior: 'smooth' });
+  }
 </script>
 
 <template>
-  <section class="flex flex-col gap-6">
+  <section class="flex flex-col gap-6 pb-24">
     <div class="flex justify-between items-center pb-4 border-b">
       <div class="flex items-center gap-4">
         <input v-model="searchQuery" type="text" placeholder="Search Product" class="border rounded-md px-4 py-2 w-80" />
@@ -144,23 +168,23 @@ function changePage(page: number) {
       <table class="w-full text-sm text-left text-gray-700">
         <thead class="text-xs text-gray-500 uppercase bg-gray-50">
           <tr>
-            <th scope="col" class="px-6 py-3">Product Information</th>
-            <th scope="col" class="px-6 py-3 text-right">Price (Rp)</th>
-            <th scope="col" class="px-6 py-3 text-center flex items-center">
+            <th scope="col" width="50%" class="px-6 py-3">Product Information</th>
+            <th scope="col" width="10%" class="px-6 py-3 text-right">Price (Rp)</th>
+            <th scope="col" width="10%" class="px-6 py-3 text-center flex items-center">
               <button class="flex items-center gap-2 group mx-auto" @click="sortByStock">
                 Stock
                 <Icon 
                   name="tabler:arrows-sort"
                   class="w-4 h-4 text-gray-300 group-hover:text-gray-500"
                   :class="[{
-                    '-scale-x-100':stockIsAsc,
+                    '-scale-x-100':stockSortIsAsc,
                   }]"
                 />
               </button>
             </th>
-            <th scope="col" class="px-6 py-3 text-center">Active</th>
-            <th scope="col" class="px-6 py-3 text-center">Best Seller</th>
-            <th scope="col" class="px-6 py-3 text-center">Action</th>
+            <th scope="col" width="10%" class="px-6 py-3 text-center">Active</th>
+            <th scope="col" width="10%" class="px-6 py-3 text-center">Best Seller</th>
+            <th scope="col" width="10%" class="px-6 py-3 text-center">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -168,11 +192,13 @@ function changePage(page: number) {
           <tr v-else-if="paginatedProducts.length === 0"><td colspan="6" class="text-center p-8">No products found.</td></tr>
           <template v-else>
             <tr v-for="product in paginatedProducts" :key="product.id" class="bg-white border-b hover:bg-gray-50">
-              <td class="px-6 py-4">
+            <td class="px-6 py-4">
                 <div class="flex items-center gap-4">
-                  <img :src="product.images[0] || '/placeholder.png'" class="w-12 h-12 object-cover rounded-md" alt="Product Image" />
+                  <img :src="product.images[0] || '/placeholder.png'" class="w-12 h-12 object-cover rounded-md" alt="Product Image" >
                   <div>
-                    <div class="font-bold text-gray-900">{{ product.name }}</div>
+                    <div class="font-bold text-gray-900">
+                      <UiHighlightText :text="product.name" :query="searchQuery" />
+                    </div>
                     <div class="text-xs text-gray-500">{{ product.category?.name || 'Uncategorized' }}</div>
                   </div>
                 </div>
@@ -206,7 +232,7 @@ function changePage(page: number) {
                   <button @click="toggleMenu(product.id)" class="text-gray-500 hover:text-gray-800 p-2 rounded-full"><Icon name="fa6-solid:ellipsis-vertical" class="w-5 h-5"/></button>
                   <div v-if="openMenuId === product.id" class="absolute right-2 -bottom-5 w-32 bg-white border rounded-md shadow-lg z-10">
                     <button @click="startEditing(product)" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit</button>
-                    <button @click="console.log('delete')" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</button>
+                    <button @click="confirmDeleting(product)" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</button>
                   </div>
                 </div>
               </td>
@@ -243,5 +269,14 @@ function changePage(page: number) {
         </button>
       </div>
     </div>
+    <UiConfirmationModal 
+      v-if="productToDelete"
+      title="Delete Product"
+      :message="`Are you sure you want to permanently delete ${productToDelete.name}? This action cannot be undone.`"
+      @cancel="productToDelete = null"
+      @confirm="deleteProduct"
+    />
   </section>
+
+  
 </template>
