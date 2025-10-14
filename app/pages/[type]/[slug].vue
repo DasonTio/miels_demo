@@ -11,7 +11,7 @@ const cartStore = useCartStore();
 const type = route.params.type as string;
 const slug = route.params.slug as string;
 
-const { data: product, pending } = await useFetch<ProductBundle>(`/api/products/${type}/${slug}`);
+const { data: product, pending } = await useFetch<ProductBundle>(`/api/${type}/${slug}`);
 
 const selectedVariants = ref<Record<number, string>>({});
 const quantity = ref(1);
@@ -53,7 +53,7 @@ function slideTo(val: number) {
         >
           <Slide v-for="(image, index) in product.images" :key="index">
             <div class="carousel__item w-full h-fit">
-              <img :src="image.image_url" :alt="product.name" class="w-full h-full object-cover rounded-lg shadow-lg" >
+              <img :src="image" :alt="product.name" class="w-full h-full object-cover rounded-lg shadow-lg" >
             </div>
           </Slide>
           <template #addons>
@@ -70,7 +70,7 @@ function slideTo(val: number) {
               @click="slideTo(index)"
             >
               <img 
-                :src="image.image_url" 
+                :src="image" 
                 :alt="product.name + ' thumbnail ' + index"
                 :class="[
                   'w-full h-full object-cover rounded-md border-2 transition-all',

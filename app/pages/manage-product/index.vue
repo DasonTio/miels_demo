@@ -1,143 +1,144 @@
 <script setup lang="ts">
-  import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
-  import type { DisplayProduct } from '~~/app/types/product';
-  import type { CategoryResponse } from '~~/server/api/categories';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import type { DisplayProduct } from '~~/app/types/product';
+import type { CategoryResponse } from '~~/server/api/categories';
 
-  definePageMeta({
-    layout: "authenticated"
-  });
+definePageMeta({
+  layout: "authenticated"
+});
 
-  const [{ data: allProducts, pending, refresh: refreshProducts }, { data: categories }] = await Promise.all([
-    useFetch<DisplayProduct[]>('/api/admin/products', { default: () => [] }),
-    useFetch<CategoryResponse[]>('/api/categories', { default: () => [] }),
-  ]);
+const router = useRouter()
+const [{ data: allProducts, pending, refresh: refreshProducts }, { data: categories }] = await Promise.all([
+  useFetch<DisplayProduct[]>('/api/admin/products', { default: () => [] }),
+  useFetch<CategoryResponse[]>('/api/categories', { default: () => [] }),
+]);
 
-  // Filtering
-  const filterTab = ref('All Products');
-  const searchQuery = ref('');
-  const selectedCategory = ref('All Category');
-  const currentPage = ref(1);
-  const itemsPerPage = 10;
-  const openMenuId = ref<number | null>(null);
+// Filtering
+const filterTab = ref('All Products');
+const searchQuery = ref('');
+const selectedCategory = ref('All Category');
+const currentPage = ref(1);
+const itemsPerPage = 10;
+const openMenuId = ref<number | null>(null);
 
-  // Editing
-  const actionMenuRefs = ref<Record<number, HTMLElement | null>>({});
-  const editingProductId = ref<number | null>(null);
-  const editingProductData = ref<Partial<DisplayProduct>>({});
-  const isSaving = ref(false);
+// Editing
+const actionMenuRefs = ref<Record<number, HTMLElement | null>>({});
+const editingProductId = ref<number | null>(null);
+const editingProductData = ref<Partial<DisplayProduct>>({});
+const isSaving = ref(false);
 
-  // Deleting
-  const productToDelete = ref<DisplayProduct | null>(null);
+// Deleting
+const productToDelete = ref<DisplayProduct | null>(null);
 
-  // Sort
-  const stockSortIsAsc = ref<boolean>(true);
-
-
-  const filteredProducts = computed(() => {
-    let products = allProducts.value;
-    if (filterTab.value === 'Active') products = products.filter(p => p.is_active);
-    else if (filterTab.value === 'Inactive') products = products.filter(p => !p.is_active);
-
-    if (selectedCategory.value !== 'All Category') products = products.filter(p => p.category?.slug === selectedCategory.value);
-    
-    if (searchQuery.value) {
-      const lowerCaseQuery = searchQuery.value.toLowerCase();
-      products = products.filter(p => p.name.toLowerCase().includes(lowerCaseQuery));
-    }
+// Sort
+const stockSortIsAsc = ref<boolean>(true);
 
 
-    const sortedProducts = [...products];
-    
-    sortedProducts.sort((a,b)=>{
-        const valA = a.stock ?? -1;
-        const valB = b.stock ?? -1;
-        const comparison = valA - valB;
-        return stockSortIsAsc.value ? comparison : -comparison;
-    })
+const filteredProducts = computed(() => {
+  let products = allProducts.value;
+  if (filterTab.value === 'Active') products = products.filter(p => p.is_active);
+  else if (filterTab.value === 'Inactive') products = products.filter(p => !p.is_active);
 
-    return sortedProducts
-    
-  });
-
-  function sortByStock() {
-    stockSortIsAsc.value = !stockSortIsAsc.value
+  if (selectedCategory.value !== 'All Category') products = products.filter(p => p.category?.slug === selectedCategory.value);
+  
+  if (searchQuery.value) {
+    const lowerCaseQuery = searchQuery.value.toLowerCase();
+    products = products.filter(p => p.name.toLowerCase().includes(lowerCaseQuery));
   }
 
-  const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage));
-  const paginatedProducts = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return filteredProducts.value.slice(start, end);
-  });
 
-  watch([filterTab, searchQuery, selectedCategory], () => { currentPage.value = 1; });
+  const sortedProducts = [...products];
+  
+  sortedProducts.sort((a,b)=>{
+      const valA = a.stock ?? -1;
+      const valB = b.stock ?? -1;
+      const comparison = valA - valB;
+      return stockSortIsAsc.value ? comparison : -comparison;
+  })
 
-  const handleClickOutside = (event: MouseEvent) => {
-    if (openMenuId.value === null) return;
-    const activeMenu = actionMenuRefs.value[openMenuId.value];
-    if (activeMenu && !activeMenu.contains(event.target as Node)) openMenuId.value = null;
-  };
-  onMounted(() => document.addEventListener('click', handleClickOutside));
-  onUnmounted(() => document.removeEventListener('click', handleClickOutside));
+  return sortedProducts
+  
+});
 
-  const formatPrice = (amount: number | null) => {
-    if (amount === null) return 'N/A';
-    return new Intl.NumberFormat('id-ID').format(amount);
-  };
+function sortByStock() {
+  stockSortIsAsc.value = !stockSortIsAsc.value
+}
 
-  function toggleMenu(productId: number) {
-    openMenuId.value = openMenuId.value === productId ? null : productId;
+const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage));
+const paginatedProducts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filteredProducts.value.slice(start, end);
+});
+
+watch([filterTab, searchQuery, selectedCategory], () => { currentPage.value = 1; });
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (openMenuId.value === null) return;
+  const activeMenu = actionMenuRefs.value[openMenuId.value];
+  if (activeMenu && !activeMenu.contains(event.target as Node)) openMenuId.value = null;
+};
+onMounted(() => document.addEventListener('click', handleClickOutside));
+onUnmounted(() => document.removeEventListener('click', handleClickOutside));
+
+const formatPrice = (amount: number | null) => {
+  if (amount === null) return 'N/A';
+  return new Intl.NumberFormat('id-ID').format(amount);
+};
+
+function toggleMenu(productId: number) {
+  openMenuId.value = openMenuId.value === productId ? null : productId;
+}
+
+function startEditing(product: DisplayProduct) {
+  editingProductId.value = product.id;
+  editingProductData.value = JSON.parse(JSON.stringify(product));
+  openMenuId.value = null;
+}
+
+function cancelEditing() {
+  editingProductId.value = null;
+  editingProductData.value = {};
+}
+
+async function updateProduct(productId: number, payload: Partial<DisplayProduct>) {
+  isSaving.value = true;
+  try {
+    await $fetch(`/api/admin/products/${productId}`, {
+      method: 'PUT',
+      body: payload
+    });
+    await refreshProducts(); 
+  } catch (err) {
+    console.error("Failed to update product:", err);
+  } finally {
+    isSaving.value = false;
+    cancelEditing();
   }
+}
+async function deleteProduct() {
+  try {
+    await $fetch(`/api/admin/products/${productToDelete.value?.id}`, {
+      method: 'DELETE',
+      body: { type: productToDelete.value?.type }
+    });
+    await refreshProducts(); 
+  } catch (err) { console.error("Delete failed:", err); }
+  finally{
+    productToDelete.value = null
+  }
+}
 
-  function startEditing(product: DisplayProduct) {
-    editingProductId.value = product.id;
-    editingProductData.value = JSON.parse(JSON.stringify(product));
-    openMenuId.value = null;
-  }
+function confirmDeleting(product: DisplayProduct) {
+  openMenuId.value = null; 
+  productToDelete.value = product
+}
 
-  function cancelEditing() {
-    editingProductId.value = null;
-    editingProductData.value = {};
-  }
-
-  async function updateProduct(productId: number, payload: Partial<DisplayProduct>) {
-    isSaving.value = true;
-    try {
-      await $fetch(`/api/admin/products/${productId}`, {
-        method: 'PUT',
-        body: payload
-      });
-      await refreshProducts(); 
-    } catch (err) {
-      console.error("Failed to update product:", err);
-    } finally {
-      isSaving.value = false;
-      cancelEditing();
-    }
-  }
-  async function deleteProduct() {
-    try {
-      await $fetch(`/api/admin/products/${productToDelete.value?.id}`, {
-        method: 'DELETE',
-        body: { type: productToDelete.value?.type }
-      });
-      await refreshProducts(); 
-    } catch (err) { console.error("Delete failed:", err); }
-    finally{
-      productToDelete.value = null
-    }
-  }
-
-  function confirmDeleting(product: DisplayProduct) {
-    openMenuId.value = null; 
-    productToDelete.value = product
-  }
-
-  function changePage(page: number) {
-    if (page < 1 || page > totalPages.value) return;
-    currentPage.value = page;
-    window.scrollTo({ top: document.getElementById('product-grid')?.offsetTop, behavior: 'smooth' });
-  }
+function changePage(page: number) {
+  if (page < 1 || page > totalPages.value) return;
+  currentPage.value = page;
+  window.scrollTo({ top: document.getElementById('product-grid')?.offsetTop, behavior: 'smooth' });
+}
 </script>
 
 <template>
@@ -153,7 +154,7 @@
           <Icon name="tabler:chevron-down" class="absolute right-2 top-1/2 -translate-y-1/2"/>
         </div>
       </div>
-      <button class="bg-green-700 px-6 py-2.5 text-white rounded-md font-semibold">+ New Product</button>
+      <button class="bg-green-700 px-6 py-2.5 text-white rounded-md font-semibold" @click="router.push('/manage-product/add')">+ New Product</button>
     </div>
     <div class="flex [&>button]:py-2 gap-8">
       <button 
