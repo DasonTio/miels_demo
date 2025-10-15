@@ -29,7 +29,6 @@ function selectVariant(bundleItemId: number, variantName: string) {
   selectedVariants.value[bundleItemId] = variantName;
 }
 
-// MARK: Carousel
 const currentSlide = ref(0);
 
 function slideTo(val: number) {

@@ -90,16 +90,21 @@ function toggleMenu(productId: number) {
   openMenuId.value = openMenuId.value === productId ? null : productId;
 }
 
-function startEditing(product: DisplayProduct) {
+function startQuickEditing(product: DisplayProduct) {
   editingProductId.value = product.id;
   editingProductData.value = JSON.parse(JSON.stringify(product));
   openMenuId.value = null;
 }
 
-function cancelEditing() {
+function cancelQuickEditing() {
   editingProductId.value = null;
   editingProductData.value = {};
 }
+
+function startEditing(product: DisplayProduct){
+  router.push(`/manage-products/${product.id}`)
+}
+
 
 async function updateProduct(productId: number, payload: Partial<DisplayProduct>) {
   isSaving.value = true;
@@ -113,7 +118,7 @@ async function updateProduct(productId: number, payload: Partial<DisplayProduct>
     console.error("Failed to update product:", err);
   } finally {
     isSaving.value = false;
-    cancelEditing();
+    cancelQuickEditing();
   }
 }
 async function deleteProduct() {
@@ -145,7 +150,7 @@ function changePage(page: number) {
   <section class="flex flex-col gap-6 pb-24">
     <div class="flex justify-between items-center pb-4 border-b">
       <div class="flex items-center gap-4">
-        <input v-model="searchQuery" type="text" placeholder="Search Product" class="border rounded-md px-4 py-2 w-80" />
+        <input v-model="searchQuery" type="text" placeholder="Search Product" class="border rounded-md px-4 py-2 w-80" >
         <div class="relative">
           <select v-model="selectedCategory" class="border rounded-md px-4 py-2 appearance-none">
             <option>All Category</option>
@@ -154,7 +159,7 @@ function changePage(page: number) {
           <Icon name="tabler:chevron-down" class="absolute right-2 top-1/2 -translate-y-1/2"/>
         </div>
       </div>
-      <button class="bg-green-700 px-6 py-2.5 text-white rounded-md font-semibold" @click="router.push('/manage-product/add')">+ New Product</button>
+      <button class="bg-green-700 px-6 py-2.5 text-white rounded-md font-semibold" @click="router.push('/manage-products/add')">+ New Product</button>
     </div>
     <div class="flex [&>button]:py-2 gap-8">
       <button 
@@ -205,15 +210,15 @@ function changePage(page: number) {
                 </div>
               </td>
               <td class="px-6 py-4 font-mono text-right">
-                <input v-if="editingProductId === product.id" v-model.number="editingProductData.price" type="number" class="w-24 border rounded-md px-2 py-1 text-right" />
+                <input v-if="editingProductId === product.id" v-model.number="editingProductData.price" type="number" class="w-24 border rounded-md px-2 py-1 text-right" >
                 <span v-else>{{ formatPrice(product.price) }}</span>
               </td>
               <td class="px-6 py-4 text-center">
-                <input v-if="editingProductId === product.id && product.type === 'product'" v-model.number="editingProductData.stock" type="number" class="w-20 border rounded-md px-2 py-1 text-center" />
+                <input v-if="editingProductId === product.id && product.type === 'product'" v-model.number="editingProductData.stock" type="number" class="w-20 border rounded-md px-2 py-1 text-center" >
                 <span v-else>{{ product.stock ?? 'N/A' }}</span>
               </td>
               <td class="px-6 py-4 text-center">
-                <button @click="updateProduct(product.id, { type: product.type, is_active: !product.is_active })" :class="['w-11 h-6 rounded-full p-1 transition-colors', product.is_active ? 'bg-green-600' : 'bg-gray-300']">
+                <button :class="['w-11 h-6 rounded-full p-1 transition-colors', product.is_active ? 'bg-green-600' : 'bg-gray-300']" @click="updateProduct(product.id, { type: product.type, is_active: !product.is_active })">
                   <div :class="['w-4 h-4 rounded-full bg-white transition-transform', { 'transform translate-x-5': product.is_active }]"/>
                 </button>
               </td>
@@ -226,14 +231,15 @@ function changePage(page: number) {
                 :ref="(el) => {actionMenuRefs[product.id] = el as HTMLElement}" 
                 class="px-6 py-4 text-center relative" >
                 <div v-if="editingProductId === product.id" class="flex items-center justify-center gap-2">
-                  <button @click="cancelEditing" class="text-red-500 hover:text-red-700 p-1 disabled:opacity-50" :disabled="isSaving"><Icon name="fa6-solid:xmark" class="w-5 h-5" /></button>
-                  <button @click="updateProduct(product.id, editingProductData)" class="text-green-500 hover:text-green-700 p-1 disabled:opacity-50" :disabled="isSaving"><Icon name="fa6-solid:check" class="w-5 h-5" /></button>
+                  <button class="text-red-500 hover:text-red-700 p-1 disabled:opacity-50" :disabled="isSaving" @click="cancelQuickEditing"><Icon name="fa6-solid:xmark" class="w-5 h-5" /></button>
+                  <button class="text-green-500 hover:text-green-700 p-1 disabled:opacity-50" :disabled="isSaving" @click="updateProduct(product.id, editingProductData)"><Icon name="fa6-solid:check" class="w-5 h-5" /></button>
                 </div>
                 <div v-else>
-                  <button @click="toggleMenu(product.id)" class="text-gray-500 hover:text-gray-800 p-2 rounded-full"><Icon name="fa6-solid:ellipsis-vertical" class="w-5 h-5"/></button>
+                  <button class="text-gray-500 hover:text-gray-800 p-2 rounded-full" @click="toggleMenu(product.id)"><Icon name="fa6-solid:ellipsis-vertical" class="w-5 h-5"/></button>
                   <div v-if="openMenuId === product.id" class="absolute right-2 -bottom-5 w-32 bg-white border rounded-md shadow-lg z-10">
-                    <button @click="startEditing(product)" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit</button>
-                    <button @click="confirmDeleting(product)" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Delete</button>
+                    <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" @click="startQuickEditing(product)">Quick Edit</button>
+                    <button class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" @click="startEditing(product)">Detail Edit</button>
+                    <button class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50" @click="confirmDeleting(product)">Delete</button>
                   </div>
                 </div>
               </td>

@@ -3,6 +3,21 @@
 @tailwind components;
 @tailwind variants;
 
+
+@layer components {
+  .form-submitted input:invalid,
+  .form-submitted select:invalid,
+  .form-submitted textarea:invalid {
+    @apply border-red-500;
+  }
+  
+  .form-submitted input:invalid:focus,
+  .form-submitted select:invalid:focus,
+  .form-submitted textarea:invalid:focus {
+    @apply ring-red-500 border-red-500;
+  }
+}
+
 /* assets/css/main.css */
 html.lenis {
   height: auto;
