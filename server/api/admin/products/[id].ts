@@ -5,6 +5,18 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "~~/app/types/database";
 import type { DisplayProduct } from "~~/app/types/product";
 
+function parseImages(imagesData: unknown): string[] {
+  if (Array.isArray(imagesData)) return imagesData.map(String);
+  if (typeof imagesData !== "string" || imagesData === "null") return [];
+  try {
+    let parsed = JSON.parse(imagesData);
+    if (typeof parsed === "string") parsed = JSON.parse(parsed);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 type ProductUpdatePayload = Partial<DisplayProduct> & {
   category_id?: number | null;
 };
@@ -56,15 +68,8 @@ async function getProductHandler({
     .eq("id", productId)
     .single();
 
-  if (product) return { ...product, type: "product" };
-
-  const { data: bundle } = await client
-    .from("bundles")
-    .select("*, category:categories(*)")
-    .eq("id", productId)
-    .single();
-
-  if (bundle) return { ...bundle, type: "bundle" };
+  if (product)
+    return { ...product, images: parseImages(product.images), type: "product" };
 
   if (error && error.code !== "PGRST116") {
     // PGRST116 means "no rows found"

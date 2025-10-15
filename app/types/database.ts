@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
@@ -125,48 +127,141 @@ export type Database = {
         }
         Relationships: []
       }
+      order_items: {
+        Row: {
+          id: number
+          order_id: number
+          price_at_purchase: number
+          product_id: number
+          quantity: number
+        }
+        Insert: {
+          id?: number
+          order_id: number
+          price_at_purchase: number
+          product_id: number
+          quantity: number
+        }
+        Update: {
+          id?: number
+          order_id?: number
+          price_at_purchase?: number
+          product_id?: number
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string | null
+          id: number
+          order_number: string
+          status: Database["public"]["Enums"]["order_status"]
+          total_price: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          order_number?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total_price: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          order_number?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total_price?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
+          bpom_number: string | null
           category_id: number | null
           created_at: string | null
           description: string | null
+          height_cm: number | null
           id: number
           images: Json | null
           is_active: boolean | null
           is_best_seller: boolean | null
+          length_cm: number | null
+          min_purchase: number | null
           name: string
           original_id: number | null
           price: number | null
+          size: string | null
+          sku_id: string | null
           slug: string | null
           stock: number | null
+          unit: string | null
+          weight_gr: number | null
+          width_cm: number | null
         }
         Insert: {
+          bpom_number?: string | null
           category_id?: number | null
           created_at?: string | null
           description?: string | null
+          height_cm?: number | null
           id?: number
           images?: Json | null
           is_active?: boolean | null
           is_best_seller?: boolean | null
+          length_cm?: number | null
+          min_purchase?: number | null
           name: string
           original_id?: number | null
           price?: number | null
+          size?: string | null
+          sku_id?: string | null
           slug?: string | null
           stock?: number | null
+          unit?: string | null
+          weight_gr?: number | null
+          width_cm?: number | null
         }
         Update: {
+          bpom_number?: string | null
           category_id?: number | null
           created_at?: string | null
           description?: string | null
+          height_cm?: number | null
           id?: number
           images?: Json | null
           is_active?: boolean | null
           is_best_seller?: boolean | null
+          length_cm?: number | null
+          min_purchase?: number | null
           name?: string
           original_id?: number | null
           price?: number | null
+          size?: string | null
+          sku_id?: string | null
           slug?: string | null
           stock?: number | null
+          unit?: string | null
+          weight_gr?: number | null
+          width_cm?: number | null
         }
         Relationships: [
           {
@@ -178,6 +273,51 @@ export type Database = {
           },
         ]
       }
+      tickets: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string | null
+          description: string
+          id: number
+          issue_type: Database["public"]["Enums"]["ticket_issue_type"]
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["ticket_status"]
+          supporting_files: Json | null
+          ticket_id: string
+          transaction_reference: string | null
+          user_id: string
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description: string
+          id?: number
+          issue_type: Database["public"]["Enums"]["ticket_issue_type"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          supporting_files?: Json | null
+          ticket_id?: string
+          transaction_reference?: string | null
+          user_id: string
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          description?: string
+          id?: number
+          issue_type?: Database["public"]["Enums"]["ticket_issue_type"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          supporting_files?: Json | null
+          ticket_id?: string
+          transaction_reference?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -186,7 +326,19 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      order_status:
+        | "pending"
+        | "paid"
+        | "processed"
+        | "shipped"
+        | "delivered"
+        | "failed"
+      ticket_issue_type:
+        | "order_transaction"
+        | "product_inquiry"
+        | "account_issue"
+        | "other"
+      ticket_status: "ongoing" | "resolved" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -313,6 +465,22 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      order_status: [
+        "pending",
+        "paid",
+        "processed",
+        "shipped",
+        "delivered",
+        "failed",
+      ],
+      ticket_issue_type: [
+        "order_transaction",
+        "product_inquiry",
+        "account_issue",
+        "other",
+      ],
+      ticket_status: ["ongoing", "resolved", "closed"],
+    },
   },
 } as const

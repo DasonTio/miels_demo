@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { useCartStore } from '#imports';
 
-const { t } = useI18n()
-const localePath = useLocalePath()
+definePageMeta({
+  middleware: 'auth' 
+});
+
+const { t } = useI18n();
+const localePath = useLocalePath();
 const cartStore = useCartStore();
+const router = useRouter();
 
 function updateItemQuantity(productId: number, newQuantity: number) {
   cartStore.updateQuantity(productId, newQuantity);
@@ -12,6 +17,25 @@ function updateItemQuantity(productId: number, newQuantity: number) {
 function removeItem(productId: number) {
   if (confirm('Are you sure you want to remove this item?')) {
     cartStore.removeProduct(productId);
+  }
+}
+
+async function handleCheckout() {
+  try {
+    // const { orderNumber } = 
+    await $fetch('/api/checkout', {
+      method: 'POST',
+      body: { 
+        items: cartStore.items,
+        totalPrice: cartStore.totalPrice
+      }
+    });
+    
+    cartStore.clearCart();
+    router.push('/orders');
+    
+  } catch (err) {
+    console.error("Checkout failed:", err);
   }
 }
 </script>
@@ -39,7 +63,7 @@ function removeItem(productId: number) {
           class="flex items-center gap-4 p-4 border rounded-lg"
         >
           <img 
-            :src="item.product.images[0]?.image_url" 
+            :src="item.product.images[0]" 
             :alt="item.product.name" 
             class="w-24 h-24 object-cover rounded-md"
           >
@@ -84,8 +108,8 @@ function removeItem(productId: number) {
             <UiPrice :amount="cartStore.totalPrice" />
           </div>
 
-          <UiButton t-key="cart.checkout" class="w-full mt-6" />
-        </div>
+          <UiButton t-key="cart.checkout" class="w-full mt-6" @click="handleCheckout" />
+          </div>
       </aside>
     </div>
   </div>
