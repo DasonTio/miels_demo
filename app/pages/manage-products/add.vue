@@ -7,41 +7,34 @@ import type { DisplayProduct } from '~~/app/types/product';
 import { useSupabaseClient } from '#imports';
 import type { Database } from '~~/app/types/database';
 
+interface ImageState {
+  url: string;      
+  file: File;       
+}
+
 definePageMeta({
   layout: "authenticated",
   middleware: "auth"
 });
 
-// --- STATE & ROUTING ---
 const router = useRouter();
 const supabase = useSupabaseClient<Database>();
 const localePath = useLocalePath();
 
 const form = ref<Partial<DisplayProduct>>({
-  name: '',
-  description: '',
-  images: [], 
-  unit: 'gram', 
-  size: '',
-  price: null,
-  stock: null,
-  min_purchase: 1,
-  is_active: true,
-  is_best_seller: false,
+  name: '', description: '', images: [], unit: 'gram', size: '', price: null,
+  stock: null, min_purchase: 1, is_active: true, is_best_seller: false,
 });
 
-const filesToUpload = ref<File[]>([]); 
-const imagePreviews = ref<string[]>([]); 
+const imageState = ref<ImageState[]>([]); 
 const selectedCategoryId = ref<number | null>(null); 
 const loading = ref(false);
 const error = ref<string | null>(null);
 const hasAttemptedSubmit = ref(false);
 
-// --- SCROLL-SPY ---
 const activeSectionId = ref('product-information');   
 let observer: IntersectionObserver;
 
-// --- DATA FETCHING ---
 const { data: categories } = await useFetch<CategoryResponse[]>('/api/categories', { default: () => [] });
 
 onMounted(() => {
@@ -62,26 +55,24 @@ onUnmounted(() => {
   if (observer) observer.disconnect();
 });
 
-// --- EVENT HANDLERS & LOGIC ---
 function onFileChange(event: Event) {
   const input = event.target as HTMLInputElement;
   if (!input.files) return;
-  
-  const newFiles = Array.from(input.files);
-  filesToUpload.value.push(...newFiles);
-  
-  const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-  imagePreviews.value.push(...newPreviews);
+
+  for (const file of Array.from(input.files)) {
+    imageState.value.push({
+      url: URL.createObjectURL(file),
+      file: file
+    });
+  }
+  input.value = '';
 }
 
 function removeImage(index: number) {
-  const previewUrl = imagePreviews.value[index];
-  if (previewUrl && previewUrl.startsWith('blob:')) {
-    const fileIndex = filesToUpload.value.findIndex(file => URL.createObjectURL(file) === previewUrl);
-    if (fileIndex > -1) filesToUpload.value.splice(fileIndex, 1);
-    URL.revokeObjectURL(previewUrl);
-  }
-  imagePreviews.value.splice(index, 1);
+  const image = imageState.value[index];
+  if(image)
+    URL.revokeObjectURL(image.url); 
+    imageState.value.splice(index, 1);
 }
 
 async function handleSubmit(event: Event) {
@@ -93,11 +84,9 @@ async function handleSubmit(event: Event) {
   error.value = null;
 
   try {
-    const uploadPromises = filesToUpload.value.map(async (file) => {
-      const filePath = `public/${Date.now()}-${file.name}`;
-      console.log(filePath)
-      const { data, error: uploadError } = await supabase.storage.from('images').upload(filePath, file);
-      console.log(data)
+    const uploadPromises = imageState.value.map(async (image) => {
+      const filePath = `public/${Date.now()}-${image.file.name}`;
+      const { data, error: uploadError } = await supabase.storage.from('images').upload(filePath, image.file);
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(data.path);
       return publicUrl;
@@ -112,7 +101,7 @@ async function handleSubmit(event: Event) {
 
     await $fetch('/api/admin/products', { method: 'POST', body: payload });
     
-    router.push('/manage-products');
+    router.push('/manage-products'); 
   } catch (e: any) {
     error.value = e.message;
     console.error("Failed to save product:", e);
@@ -161,11 +150,11 @@ v-for="section in ['product-information', 'product-specification', 'shipping-inf
             <p class="text-xs text-gray-500 mb-2">File format: JPG, JPEG, PNG. Max size: 2MB.</p>
             <div class="mt-2 flex items-center flex-wrap gap-4">
               <label for="file-upload" class="w-24 h-24 border rounded-lg flex items-center justify-center bg-gray-50 relative cursor-pointer group">
-                <input id="file-upload" type="file" accept="image/*" multiple class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" :required="imagePreviews.length === 0" @change="onFileChange">
+                <input id="file-upload" type="file" accept="image/*" multiple class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" :required="imageState.length === 0" @change="onFileChange">
                 <Icon name="uil:image-upload" class="w-8 h-8 text-gray-400 group-hover:text-gray-600" />
               </label>
-              <div v-for="(img, index) in imagePreviews" :key="img" class="relative w-24 h-24 rounded-lg overflow-hidden border">
-                <img :src="img" class="w-full h-full object-cover" >
+              <div v-for="(img, index) in imageState" :key="index" class="relative w-24 h-24 rounded-lg overflow-hidden border">
+                <img :src="img.url" class="w-full h-full object-cover" >
                 <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 text-xs leading-none" @click="removeImage(index)">
                   <Icon name="fa6-solid:xmark" class="w-3 h-3"/>
                 </button>

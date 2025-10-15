@@ -8,9 +8,9 @@ import { useSupabaseClient } from '#imports';
 import type { Database } from '~~/app/types/database';
 
 interface ImageState {
-  url: string;
-  isNew: boolean;
-  file?: File;
+  url: string;      
+  isNew: boolean;   
+  file?: File;      
 }
 
 definePageMeta({
@@ -22,6 +22,7 @@ const router = useRouter();
 const route = useRoute();
 const supabase = useSupabaseClient<Database>();
 const localePath = useLocalePath();
+
 const isEditing = computed(() => !!route.params.id);
 const productId = computed(() => route.params.id as string);
 
@@ -30,12 +31,13 @@ const form = ref<Partial<DisplayProduct>>({
   stock: null, min_purchase: 1, is_active: true, is_best_seller: false,
 });
 
-const imageState = ref<ImageState[]>([]);
-const selectedCategoryId = ref<number | null>(null);
+const imageState = ref<ImageState[]>([]); 
+const selectedCategoryId = ref<number | null>(null); 
 const loading = ref(false);
 const error = ref<string | null>(null);
 const hasAttemptedSubmit = ref(false);
-const activeSectionId = ref('product-information');
+
+const activeSectionId = ref('product-information');   
 let observer: IntersectionObserver;
 
 const { data: categories } = await useFetch<CategoryResponse[]>('/api/categories', { default: () => [] });
@@ -43,26 +45,27 @@ const { data: categories } = await useFetch<CategoryResponse[]>('/api/categories
 onMounted(async () => {
   const sections = ['product-information', 'product-specification', 'shipping-information'];
   const observerOptions = { root: null, rootMargin: '-25% 0px -65% 0px', threshold: 0 };
+  
   observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => { if (entry.isIntersecting) activeSectionId.value = entry.target.id; });
   }, observerOptions);
+
   sections.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) observer.observe(el);
+    const element = document.getElementById(id);
+    if (element) observer.observe(element);
   });
 
-  if (isEditing.value) {
-    loading.value = true;
-    try {
-      const productData = await $fetch<DisplayProduct>(`/api/admin/products/${productId.value}`);
-      form.value = { ...productData };
-      selectedCategoryId.value = productData.category?.id ?? null;
-      imageState.value = (productData.images || []).map(url => ({ url, isNew: false }));
-    } catch (e: any) {
-      error.value = e.message || "Failed to load product data.";
-    } finally {
-      loading.value = false;
-    }
+  loading.value = true;
+  try {
+    const productData = await $fetch<DisplayProduct>(`/api/admin/products/${productId.value}`);
+    form.value = { ...productData };
+    selectedCategoryId.value = productData.category?.id ?? null;
+    imageState.value = (productData.images || []).map(url => ({ url, isNew: false }));
+  } catch (e: any) {
+    error.value = e.message || "Failed to load product data.";
+    console.error(e);
+  } finally {
+    loading.value = false;
   }
 });
 
@@ -73,15 +76,22 @@ onUnmounted(() => {
 function onFileChange(event: Event) {
   const input = event.target as HTMLInputElement;
   if (!input.files) return;
+
   for (const file of Array.from(input.files)) {
-    imageState.value.push({ url: URL.createObjectURL(file), isNew: true, file: file });
+    imageState.value.push({
+      url: URL.createObjectURL(file),
+      isNew: true,
+      file: file
+    });
   }
   input.value = '';
 }
 
 function removeImage(index: number) {
   const image = imageState.value[index];
-  if (image && image.isNew) URL.revokeObjectURL(image.url);
+  if (image && image.isNew) {
+    URL.revokeObjectURL(image.url); 
+  }
   imageState.value.splice(index, 1);
 }
 
@@ -95,6 +105,7 @@ async function handleSubmit(event: Event) {
 
   try {
     const newFilesToUpload = imageState.value.filter(img => img.isNew && img.file);
+    
     const uploadPromises = newFilesToUpload.map(async (image) => {
       const filePath = `public/${Date.now()}-${image.file!.name}`;
       const { data, error: uploadError } = await supabase.storage.from('images').upload(filePath, image.file!);
@@ -104,18 +115,21 @@ async function handleSubmit(event: Event) {
     });
 
     const newImageUrls = await Promise.all(uploadPromises);
+
     const existingImageUrls = imageState.value.filter(img => !img.isNew).map(img => img.url);
 
-    const payload = { ...form.value, category_id: selectedCategoryId.value, images: [...existingImageUrls, ...newImageUrls] };
+    const payload = {
+      ...form.value,
+      category_id: selectedCategoryId.value,
+      images: [...existingImageUrls, ...newImageUrls]
+    };
 
-    if (isEditing.value) {
-      await $fetch(`/api/admin/products/${productId.value}`, { method: 'PUT', body: payload });
-    } else {
-      await $fetch('/api/admin/products', { method: 'POST', body: payload });
-    }
+    await $fetch(`/api/admin/products/${productId.value}`, { method: 'PUT', body: payload });
+    
     router.push('/manage-products');
   } catch (e: any) {
     error.value = e.message;
+    console.error("Failed to save product:", e);
   } finally {
     loading.value = false;
   }
