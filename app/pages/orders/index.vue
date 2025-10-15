@@ -2,13 +2,10 @@
 <script setup lang="ts">
 import type { Tables } from '~~/app/types/database';
 
-// 1. Secure the page and apply the correct layout
 definePageMeta({
-  layout: 'authenticated',
   middleware: 'auth'
 });
 
-// 2. Define a more specific type for our fetched order data
 type OrderWithItems = Tables<'orders'> & {
   order_items: ({
     quantity: number;
@@ -20,20 +17,15 @@ type OrderWithItems = Tables<'orders'> & {
   })[];
 };
 
-// 3. Fetch the user's order history
 const { data: orders, pending } = await useFetch<OrderWithItems[]>('/api/orders', {
   default: () => []
 });
 
-console.log(orders.value)
-
-// 4. Helper function to safely get the first image URL of an order
 const getFirstImage = (items: any[]): string => {
   const firstItemWithProduct = items.find(item => item.product?.images?.length);
   return firstItemWithProduct?.product.images[0] || 'https://placehold.co/128x128/f0ebe4/a2a2a2?text=MIELS';
 };
 
-// 5. Helper function to format dates
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('id-ID', {
     day: 'numeric',

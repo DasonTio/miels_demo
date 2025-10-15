@@ -1,34 +1,46 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <script setup lang="ts">
+import { ref, watchEffect } from 'vue';
+import { useSupabaseClient, useSupabaseUser } from '#imports';
+
 definePageMeta({
-  layout: "blank"
-})
+  layout: 'blank' 
+});
 
-const supabase = useSupabaseClient()
-const user = useSupabaseUser()
+const supabase = useSupabaseClient();
+const user = useSupabaseUser();
+const router = useRouter();
 
-const email = ref('')
-const password = ref('')
-const errorMessage = ref<string | null>(null)
-const isLoading = ref(false)
+const email = ref('');
+const password = ref('');
+const errorMessage = ref<string | null>(null);
+const isLoading = ref(false);
 
 watchEffect(() => {
-  if (user.value) navigateTo('/manage-products')
-})
+  if (user.value) {
+    const isAdmin = user.value.app_metadata?.role === 'admin';
+    
+    if (isAdmin) {
+      router.push('/manage-products');
+    } else {
+      router.push('/');
+    }
+  }
+});
 
 async function signIn() {
-  isLoading.value = true
-  errorMessage.value = null
+  isLoading.value = true;
+  errorMessage.value = null;
   try {
     const { error } = await supabase.auth.signInWithPassword({
       email: email.value,
       password: password.value,
-    })
-    if (error) throw error
+    });
+    if (error) throw error;
   } catch (error: any) {
-    errorMessage.value = error.message
+    errorMessage.value = error.message;
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
 
@@ -36,13 +48,11 @@ async function signInWithGoogle() {
   isLoading.value = true;
   errorMessage.value = null;
   try {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
     if (error) throw error;
   } catch (error: any) {
     errorMessage.value = error.message;
-  } 
+  }
 }
 </script>
 

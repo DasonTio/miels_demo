@@ -13,7 +13,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Invalid Ticket ID" });
   }
 
-  // --- Handle PUT requests to update the status ---
   if (event.method === "PUT") {
     const body = await readBody(event);
     const { error } = await client
@@ -24,7 +23,7 @@ export default defineEventHandler(async (event) => {
           body.status === "resolved" ? new Date().toISOString() : null,
       })
       .eq("id", ticketId)
-      .eq("user_id", user.id); // Extra security: ensure user owns the ticket
+      .eq("user_id", user.sub);
 
     if (error)
       throw createError({ statusCode: 500, statusMessage: error.message });

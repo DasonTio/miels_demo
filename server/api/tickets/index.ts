@@ -8,23 +8,21 @@ export default defineEventHandler(async (event) => {
 
   const client = await serverSupabaseClient<Database>(event);
 
-  // --- Handle GET requests to fetch all tickets for the user ---
   if (event.method === "GET") {
     const { data, error } = await client
       .from("tickets")
       .select("*")
-      .order("created_at", { ascending: false }); // Show newest first
+      .order("created_at", { ascending: false });
 
     if (error)
       throw createError({ statusCode: 500, statusMessage: error.message });
     return data;
   }
 
-  // --- Handle POST requests to create a new ticket ---
   if (event.method === "POST") {
     const body = await readBody(event);
     const { error } = await client.from("tickets").insert({
-      user_id: user.id,
+      user_id: user.sub,
       issue_type: body.issueType,
       description: body.description,
       transaction_reference: body.transactionReference,
