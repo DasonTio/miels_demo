@@ -4,7 +4,8 @@ import type { DisplayProduct } from '~~/app/types/product';
 import type { CategoryResponse } from '~~/server/api/categories';
 
 definePageMeta({
-  layout: "authenticated"
+  layout: "authenticated",
+  middleware: "auth"
 });
 
 const router = useRouter()

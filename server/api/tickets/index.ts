@@ -12,6 +12,7 @@ export default defineEventHandler(async (event) => {
     const { data, error } = await client
       .from("tickets")
       .select("*")
+      .eq("user_id", user.sub)
       .order("created_at", { ascending: false });
 
     if (error)

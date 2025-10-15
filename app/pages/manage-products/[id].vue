@@ -14,7 +14,8 @@ interface ImageState {
 }
 
 definePageMeta({
-  layout: "authenticated"
+  layout: "authenticated",
+  middleware: "auth"
 });
 
 const router = useRouter();

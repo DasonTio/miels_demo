@@ -8,7 +8,8 @@ import { useSupabaseClient } from '#imports';
 import type { Database } from '~~/app/types/database';
 
 definePageMeta({
-  layout: "authenticated"
+  layout: "authenticated",
+  middleware: "auth"
 });
 
 // --- STATE & ROUTING ---
@@ -94,7 +95,9 @@ async function handleSubmit(event: Event) {
   try {
     const uploadPromises = filesToUpload.value.map(async (file) => {
       const filePath = `public/${Date.now()}-${file.name}`;
+      console.log(filePath)
       const { data, error: uploadError } = await supabase.storage.from('images').upload(filePath, file);
+      console.log(data)
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(data.path);
       return publicUrl;
@@ -107,7 +110,6 @@ async function handleSubmit(event: Event) {
       images: newImageUrls
     };
 
-    // This form only ever creates new products, so it always sends a POST request
     await $fetch('/api/admin/products', { method: 'POST', body: payload });
     
     router.push('/manage-products');

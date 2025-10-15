@@ -9,14 +9,13 @@ function parseImages(imagesData: unknown): string[] {
   if (typeof imagesData !== "string" || imagesData === "null") return [];
 
   try {
-    // Handle cases where the JSON is "double-stringified"
     let parsed = JSON.parse(imagesData);
     if (typeof parsed === "string") {
       parsed = JSON.parse(parsed);
     }
     return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    return []; // Return an empty array if parsing fails
+  } catch {
+    return [];
   }
 }
 
@@ -28,7 +27,6 @@ export default defineEventHandler(async (event) => {
 
   const client = await serverSupabaseClient<Database>(event);
 
-  // Fetch orders and their related items, including product details
   const { data, error } = await client
     .from("orders")
     .select(
@@ -41,6 +39,7 @@ export default defineEventHandler(async (event) => {
       )
     `
     )
+    .eq("user_id", user.sub)
     .order("created_at", { ascending: false });
 
   if (error) {
