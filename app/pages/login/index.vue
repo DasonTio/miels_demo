@@ -13,9 +13,7 @@ const errorMessage = ref<string | null>(null)
 const isLoading = ref(false)
 
 watchEffect(() => {
-  if (user.value) {
-    navigateTo('/admin')
-  }
+  if (user.value) navigateTo('/manage-products')
 })
 
 async function signIn() {

@@ -6,10 +6,10 @@ import type { DisplayProduct } from "~~/app/types/product";
 export default defineEventHandler(async (event): Promise<DisplayProduct[]> => {
   const client = await serverSupabaseClient<Database>(event);
 
-  const { data: products, error } = await client
-    .from("products")
+  const { data: bundles, error } = await client
+    .from("bundles")
     .select(
-      "id, name, slug, price, images, stock, is_best_seller, is_active, category:categories (name, slug)"
+      "id, name, slug, price, images, is_active, is_best_seller, category:categories (name, slug)"
     )
     .eq("is_active", true);
 
@@ -17,15 +17,16 @@ export default defineEventHandler(async (event): Promise<DisplayProduct[]> => {
     throw createError({ statusCode: 500, statusMessage: error.message });
   }
 
-  if (!products) {
+  if (!bundles) {
     return [];
   }
 
-  const formattedProducts: DisplayProduct[] = products.map((p) => ({
-    ...p,
-    images: parseImages(p.images),
-    type: "product",
+  const formattedBundles: DisplayProduct[] = bundles.map((b) => ({
+    ...b,
+    stock: null,
+    images: parseImages(b.images),
+    type: "bundle",
   }));
 
-  return formattedProducts;
+  return formattedBundles;
 });
