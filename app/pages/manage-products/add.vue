@@ -93,7 +93,7 @@ async function handleSubmit(event: Event) {
 
   try {
     const uploadPromises = filesToUpload.value.map(async (file) => {
-      const filePath = `${Date.now()}-${file.name}`;
+      const filePath = `public/${Date.now()}-${file.name}`;
       const { data, error: uploadError } = await supabase.storage.from('images').upload(filePath, file);
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(data.path);

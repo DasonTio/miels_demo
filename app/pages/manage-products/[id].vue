@@ -95,7 +95,7 @@ async function handleSubmit(event: Event) {
   try {
     const newFilesToUpload = imageState.value.filter(img => img.isNew && img.file);
     const uploadPromises = newFilesToUpload.map(async (image) => {
-      const filePath = `${Date.now()}-${image.file!.name}`;
+      const filePath = `public/${Date.now()}-${image.file!.name}`;
       const { data, error: uploadError } = await supabase.storage.from('images').upload(filePath, image.file!);
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(data.path);
