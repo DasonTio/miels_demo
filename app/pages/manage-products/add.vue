@@ -129,7 +129,7 @@ async function handleSubmit(event: Event) {
         </NuxtLink>
         <h2 class="text-2xl font-bold text-gray-800">Add New Product</h2>
       </div>
-      <button type="submit" class="bg-green-700 px-6 py-2.5 text-white rounded-md font-semibold flex items-center gap-2" :disabled="loading">
+      <button type="submit" class="bg-green-700 px-6 py-2.5 text-white rounded-md font-semibold flex items-center gap-2" :disabled="loading" @click="hasAttemptedSubmit = true" >
         <Icon v-if="loading" name="eos-icons:loading" class="w-5 h-5" />
         Finish & Upload
       </button>
